@@ -1,0 +1,16 @@
+1 支持的python版本是3.6
+2 安装依赖的第三方库：
+    pip install python-openstacksdk
+    pip install sqlalchemy
+    pip install flask
+    pip install jinja2
+3 创建(openstack_sdk)mysql数据库
+    mysql -uroot -p
+    create database openstack_sdk;
+    grant all privileges on openstack_sdk.* to 'xiandian'@'localhost' identified by 'xiandian';
+    grant all privileges on openstack_sdk.* to 'xiandian'@'%' identified by 'xiandian';
+4 修改setting中db_conf字典mysql连接设置
+    mysql+pymysql://xiandian:xiandian@localhost/openstack_sdk
+5 执行bin下opsdk运行
+6 通过http调用
+

@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
 # author:xiaoming
-from oplib import op_lib_conn
-conn=op_lib_conn()
-def image_list():#获取镜像列表
+# from . import op_lib_conn
+import sys
+print(sys.path)
+
+def image_list(conn):#获取镜像列表
     images = conn.list_images()
     data={}
     for image in images:
@@ -19,7 +21,7 @@ def image_format(image):#格式化image对象成为字典
         'extra': image.extra,
     }
     return data
-def flavor_list():#获取风味列表
+def flavor_list(conn):#获取风味列表
     flavors=conn.list_sizes()
     data={}
     for flavor in flavors:
@@ -43,7 +45,7 @@ def flavor_format(flavor):#格式化风味
         'price': flavor.price
     }
     return data
-def nova_list():#获取实例列表
+def nova_list(conn):#获取实例列表
     vms=conn.list_nodes()
     data={}
     for vm in vms:
@@ -65,5 +67,5 @@ def nova_format(vm):
             'extra':vm.extra
         }
     return data
-data=nova_list()
-print(data)
+# data=nova_list()
+# print(data)

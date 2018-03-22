@@ -9,13 +9,12 @@ def file_write(filename,data):
     f.close()
 def file_read(filename):
     '''json读取'''
+    data=''
     if os.path.isfile(filename):
         f = open(filename, 'r')
         data = json.load(f)
         f.close()
-        return data
-    else:
-        error_info('文件不存在')
+    return data
 def error_info(data):
     '''报错反馈'''
     print(data)

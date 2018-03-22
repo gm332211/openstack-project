@@ -2,8 +2,7 @@
 # author:xiaoming
 from flask import Flask,request,render_template,jsonify,redirect
 import json,os,sys
-PATH=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-sys.path.insert(0,PATH)
+PATH=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 filename='%s/%s'%(PATH,'op_connect')
 from core.tools import file_write
 from core import views
@@ -16,7 +15,11 @@ def help_list():
 @app.route('/')
 def index():
     if request.method=='GET':
-        return 'This is index'
+        return 'Welcome To Python OpenStack API'
+@app.route('/v3',methods=['GET','POST'])
+def op_v3():
+    if request.method=='GET':
+        return 'OpenStack V3 Auth'
 @app.route('/connect',methods=['GET','POST'])
 def op_conn():
     '''创建连接'''
@@ -33,7 +36,6 @@ def op_conn():
         'region_name':request.values.get('region_name'),
         }
         filename='%s/db/%s'%(PATH,'op_connect.json')
-        print(filename)
         file_write(filename,data)
         return redirect('/test/connect')
 @app.route('/test/connect',methods=['GET'])
@@ -53,6 +55,11 @@ def test_conn():
 def nova_list():
     conn=op_lib_conn()
     data=views.nova_list(conn)
+    return jsonify(data)
+@app.route('/v3/flavor/list',methods=['GET'])
+def flavor_list():
+    conn=op_lib_conn()
+    data=views.flavor_list(conn)
     return jsonify(data)
 @app.route('/v3/image/list',methods=['GET'])
 def image_list():

@@ -3,7 +3,6 @@
 import json,os
 def file_write(filename,data):
     '''json写入'''
-    print(filename)
     f=open(filename,'w')
     json.dump(data,f)
     f.close()

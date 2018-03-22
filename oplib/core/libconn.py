@@ -4,16 +4,10 @@ from libcloud.compute.providers import get_driver
 from libcloud.compute.types import Provider
 from core.tools import file_read,error_info
 import os
-# PATH=os.path.dirname(os.path.dirname(__file__))
-# import sys
-# sys.path.insert(0,PATH)
-
 def op_lib_conn():
-    PATH = os.path.dirname(os.path.dirname(__file__))
+    PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     filename='%s/db/%s'%(PATH,'op_connect.json')
-    print(filename)
     data=file_read(filename)
-    print(data)
     if not data=='':
         auth_username = data.get('auth_username')
         auth_password = data.get('auth_password')

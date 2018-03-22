@@ -1,16 +1,13 @@
 # -*- coding: utf-8 -*-
 # author:xiaoming
 # from . import op_lib_conn
-import sys
-print(sys.path)
-
 def image_list(conn):#获取镜像列表
     images = conn.list_images()
     data={}
     for image in images:
         data[image.name] = image_format(image)
     return data
-def image_get(image_id):#获取单个镜像
+def image_get(conn,image_id):#获取单个镜像
     image=conn.get_image(image_id)
     return image_format(image)
 def image_format(image):#格式化image对象成为字典
@@ -27,7 +24,7 @@ def flavor_list(conn):#获取风味列表
     for flavor in flavors:
         data[flavor.name] = flavor_format(flavor)
     return data
-def flavor_get(flavor_id):#获取单个风味
+def flavor_get(conn,flavor_id):#获取单个风味
     flavor=conn.ex_get_size(flavor_id)
     return flavor_format(flavor)
 def flavor_format(flavor):#格式化风味
@@ -51,7 +48,7 @@ def nova_list(conn):#获取实例列表
     for vm in vms:
         data[vm.name]=nova_format(vm)
     return data
-def nova_get(vm_id):
+def nova_get(conn,vm_id):
     pass
 def nova_format(vm):
     data={

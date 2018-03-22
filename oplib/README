@@ -1,0 +1,20 @@
+1 依赖组件的安装
+pip install flask
+pip install apache_libcloud
+2 运行
+cd oplib/bin
+python oplib.py
+3 页面访问
+http://x.x.x.x:8621
+4 连接openstack
+http://x.x.x.x:8621/connect
+格式 例:
+region_name:RegionOne
+domain_name:domain
+auth_url:http://controller:5000
+project_name:admin
+auth_username:admin
+auth_password:000000
+5 访问页面api
+http://x.x.x.x:8621/v3/nova/list
+http://x.x.x.x:8621/v3/image/list

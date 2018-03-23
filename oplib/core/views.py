@@ -34,6 +34,16 @@ class openstack():
         if dict_json:
             return image_format(image)
         return image
+    def image_list(self,*args,**kwargs):
+        '''
+        获取镜像列表对象
+            :return dict
+        '''
+        images = self.conn.list_images()
+        data={}
+        for image in images:
+            data[image.name] = image_format(image)
+        return data
     @try_obj(message={'error':'Without this flavor id'})
     def flavor_get(self,flavor_id,dict_json=False,*args,**kwargs):
         '''
@@ -45,42 +55,6 @@ class openstack():
         if dict_json:
             return flavor_format(flavor)
         return flavor
-    @try_obj(message={'error':'Without this network id'})
-    def network_get(self,network_id,dict_json=False,*args,**kwargs):#获取单个网络
-        networks = self.conn.ex_list_networks()
-        for network in networks:
-            if hasattr(network, 'id'):
-                if getattr(network,'id') == network_id:
-                    if dict_json:
-                        return network_format(network)
-                    return network
-            else:
-                return {'error':'no network id'}
-        return {'error':'no find'}
-    @try_obj()
-    def nova_get(self,vm_id,dict_json=False,*args,**kwargs):#获取单个实例
-        vms=self.conn.list_nodes()
-        for vm in vms:
-            if hasattr(vm,'id'):
-                if getattr(vm,'id')==vm_id:
-                    if dict_json:
-                        return nova_format(vm)
-                    return vm
-            else:
-                return {'error': 'no vm id'}
-        return {'error': 'no find'}
-    def nova_reboot(self,vm,*args,**kwargs):
-        '''重启一个虚机'''
-        if self.conn.reboot_node(vm):
-            return {'info':'reboot success'}
-        else:
-            return {'error':'reboot fail'}
-    def nova_reboot_many(self,vms,*args,**kwargs):
-        '''重启多个虚机'''
-        data={}
-        for vm in vms:
-            data[vm.name]=self.nova_reboot(vm)
-        return data
     def flavor_list(self,*args,**kwargs):
         '''
         获取风味列表对象
@@ -91,16 +65,19 @@ class openstack():
         for flavor in flavors:
             data[flavor.name] = flavor_format(flavor)
         return data
-    def image_list(self,*args,**kwargs):
-        '''
-        获取镜像列表对象
-            :return dict
-        '''
-        images = self.conn.list_images()
-        data={}
-        for image in images:
-            data[image.name] = image_format(image)
-        return data
+    @try_obj(message={'error':'Without this network id'})
+    def network_get(self,network_id,dict_json=False,*args,**kwargs):
+        '''获取单个网络'''
+        networks = self.conn.ex_list_networks()
+        for network in networks:
+            if hasattr(network, 'id'):
+                if getattr(network,'id') == network_id:
+                    if dict_json:
+                        return network_format(network)
+                    return network
+            else:
+                return {'error':'no network id'}
+        return {'error':'no find'}
     def network_list(self,*args,**kwargs):
         '''
         获取网络列表对象
@@ -111,7 +88,32 @@ class openstack():
         for network in networks:
             data[network.name]=network_format(network)
         return data
-    def nova_list(self,dict_json=False,*args,**kwargs):#获取实例列表对象
+    @try_obj()
+    def nova_get(self,vms_id,dict_json=False,*args,**kwargs):
+        '''获取单个实例'''
+        vms=self.conn.list_nodes()
+        data={}
+        data_list=[]
+        for vm in vms:
+            if hasattr(vm,'id'):
+                if getattr(vm,'id') in vms_id:
+                    if dict_json:
+                        data={vm.name:nova_format(vm)}
+                    data_list.append(vm)
+            else:
+                return {'error': 'no vm id'}
+        if dict_json:
+            if len(data):
+                return data
+            else:
+                return {'error': 'no find'}
+        else:
+            if len(data_list):
+                return data_list
+            else:
+                return {'error': 'no find'}
+    def nova_list(self,dict_json=False,*args,**kwargs):
+        '''获取实例列表对象'''
         vms=self.conn.list_nodes()
         if dict_json:
             data={}
@@ -119,15 +121,70 @@ class openstack():
                 data[vm.name]=nova_format(vm)
             return data
         return vms
-    def nova_create(self,name,image,size,network_id,ex_userdata='',*args,**kwargs):#创建虚拟机
+    def nova_reboot(self,vm_id,*args,**kwargs):
+        '''重启一个虚机'''
+        vm=self.nova_get([vm_id,])
+        if self.conn.reboot_node(vm[0]):
+            return {vm[0].name:{'info':'reboot success'}}
+        else:
+            return {vm[0].name: {'info': 'reboot success'}}
+    def nova_reboot_many(self,vms_id,*args,**kwargs):
+        '''重启多个虚机'''
+        data={}
+        vms=self.nova_get(vms_id)
+        for vm in vms:
+            if self.conn.reboot_node(vm):
+                data[vm.name]={'info':'reboot success'}
+            else:
+                data[vm.name]={'error':'reboot fail'}
+        return data
+    def nova_reboot_all(self,*args,**kwargs):
+        '''关闭所有虚机'''
+        vms=self.conn.list_nodes()
+        data={}
+        for vm in vms:
+            if self.conn.reboot_node(vm):
+                data[vm.name] = {'info': 'reboot success'}
+            else:
+                data[vm.name] = {'error': 'reboot fail'}
+        return data
+    def nova_create(self,name,image_id,size_id,network_id,ex_userdata='',*args,**kwargs):
+        '''创建虚拟机'''
         node=self.conn.create_node(name=name,
-                                   image=self.image_get(image),
-                                   size=self.flavor_get(size),
+                                   image=self.image_get(image_id),
+                                   size=self.flavor_get(size_id),
                                    networks=[self.network_get(network_id),],
                                    )
         return nova_format(node)
-#一下都是格式化输出
-def image_format(image):#格式化image对象成为字典
+    def nova_del(self,vm_id,*args,**kwargs):
+        '''删除一个虚机'''
+        vm=self.nova_get([vm_id,])
+        if self.conn.destroy_node(vm[0]):
+            return {vm[0].name:{'info':'del success'}}
+        else:
+            return {vm[0].name: {'error':'del fail'}}
+    def nova_del_many(self,vms_id,*args,**kwargs):
+        '''删除多个虚机'''
+        data={}
+        vms=self.nova_get(vms_id)
+        for vm in vms:
+            if self.conn.destroy_node(vm):
+                data[vm.name]={'info':'del success'}
+            else:
+                data[vm.name] = {'info': 'del fail'}
+        return data
+    def nova_del_all(self,*args,**kwargs):
+        '''删除所有虚机'''
+        vms=self.conn.list_nodes()
+        data={}
+        for vm in vms:
+            if self.conn.destroy_node(vm):
+                data[vm.name]={'info':'del success'}
+            else:
+                data[vm.name] = {'info': 'del fail'}
+        return data
+#统一格式化
+def image_format(image):
     data = {
         'name': image.name,
         'uuid': image.uuid,
@@ -135,7 +192,7 @@ def image_format(image):#格式化image对象成为字典
         'extra': image.extra,
     }
     return data
-def flavor_format(flavor):#格式化风味
+def flavor_format(flavor):
     data = {
         'name': flavor.name,
         'uuid': flavor.uuid,

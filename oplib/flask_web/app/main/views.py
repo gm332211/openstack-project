@@ -52,6 +52,7 @@ def test_conn():
         openstack.conn=op_lib_conn()
         return jsonify({'info':'ok'})
         # return 'ok'
+@app.route('/v3/nova/create',methods=['GET','POST'])
 def nova_create():
     if request.method=='GET':
         images=openstack.image_list()
@@ -66,20 +67,23 @@ def nova_create():
         data=openstack.nova_create(name,image,flavor,network)
         return jsonify(data)
         # return jsonify({'name':name,'image':image,'flavor':flavor})
-@app.route('/v3/nova/<id>/reboot',methods=['GET'])
-def nova_reboot(id):
-    vm=openstack.nova_get(id)
-    data=openstack.nova_reboot(vm)
-    return jsonify(data)
-@app.route('/v3/nova/all/reboot',methods=['GET'])
-def nova_reboot_all():
-    vms=openstack.nova_list()
-    data=openstack.nova_reboot_many(vms)
-    return jsonify(data)
+@app.route('/v3/nova/<id>/<cmd>',methods=['GET'])
+def cmd_obj(cmd,id):
+    '''nova下的使用方法'''
+    if id=='all':
+        func = 'nova_%s_%s' %(cmd,id)
+    else:
+        func='nova_%s'%cmd
+    if hasattr(openstack,func):
+        obj=getattr(openstack,func)
+        data=obj(id)
+        return jsonify(data)
+    else:
+        return jsonify({'error':'no nova project'})
 @app.route('/v3/<project>/list',methods=['GET'])
-def obj(project):
+def list_obj(project):
+    '''查看带有列表对象的信息'''
     func='%s_list'%(project)
-    print(func)
     if hasattr(openstack,func):
         obj=getattr(openstack,func)
         data=obj(dict_json=True)
@@ -88,11 +92,12 @@ def obj(project):
         return jsonify({'error':'no project list'})
 @app.route('/v3/<project>/<id>',methods=['GET'])
 def get_obj(project,id):
-    print(project,id)
+    '''查看带有id的对象的详细信息'''
     func = '%s_get' % (project)
     if hasattr(openstack, func):
         obj = getattr(openstack, func)
-        print(obj)
         data=obj(id,dict_json=True)
         return jsonify(data)
     return jsonify({'error':'No mode of submission'})
+def image_create():
+    pass

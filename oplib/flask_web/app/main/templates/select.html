@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form action="{{action}}" method="post">
+    <p>{{name}}:<input name="{{name}}" placeholder="{{name}}" value=""></p>
+    <span>image: </span>
+<select name="image" id="1">
+{% for image in images %}
+    <option value={{images[image].id}}>{{image}}</option>
+{% endfor %}
+</select>
+    <span>flavor: </span>
+<select name="flavor" id="2">
+{% for flavor in flavors %}
+    <option value="{{flavors[flavor].id}}">{{flavor}}</option>
+{% endfor %}
+</select>
+<span>network: </span>
+<select name="network" id="3">
+{% for network in networks %}
+    <option value="{{networks[network].id}}">{{network}}</option>
+{% endfor %}
+</select>
+<p><button type="submit">submit</button></p>
+</form>
+</body>
+</html>

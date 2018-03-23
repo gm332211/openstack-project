@@ -7,7 +7,7 @@ filename='%s/%s'%(PATH,'op_connect')
 from core.tools import file_write
 from core import views
 from core.libconn import op_lib_conn
-
+openstack=views.openstack(op_lib_conn())
 app=Flask(__name__)
 @app.route('/help')
 def help_list():
@@ -49,20 +49,50 @@ def test_conn():
     except Exception as e:
         return jsonify({'error':'connection fail'})
     else:
+        openstack.conn=op_lib_conn()
         return jsonify({'info':'ok'})
         # return 'ok'
-@app.route('/v3/nova/list',methods=['GET'])
-def nova_list():
-    conn=op_lib_conn()
-    data=views.nova_list(conn)
+def nova_create():
+    if request.method=='GET':
+        images=openstack.image_list()
+        flavors=openstack.flavor_list()
+        networks=openstack.network_list()
+        return render_template('select.html',action='/v3/nova/create',images=images,flavors=flavors,networks=networks,name='name')
+    elif request.method=='POST':
+        name=request.values.get('name')
+        image = request.values.get('image')
+        flavor = request.values.get('flavor')
+        network=request.values.get('network')
+        data=openstack.nova_create(name,image,flavor,network)
+        return jsonify(data)
+        # return jsonify({'name':name,'image':image,'flavor':flavor})
+@app.route('/v3/nova/<id>/reboot',methods=['GET'])
+def nova_reboot(id):
+    vm=openstack.nova_get(id)
+    data=openstack.nova_reboot(vm)
     return jsonify(data)
-@app.route('/v3/flavor/list',methods=['GET'])
-def flavor_list():
-    conn=op_lib_conn()
-    data=views.flavor_list(conn)
+@app.route('/v3/nova/all/reboot',methods=['GET'])
+def nova_reboot_all():
+    vms=openstack.nova_list()
+    data=openstack.nova_reboot_many(vms)
     return jsonify(data)
-@app.route('/v3/image/list',methods=['GET'])
-def image_list():
-    conn = op_lib_conn()
-    data = views.image_list(conn)
-    return jsonify(data)
+@app.route('/v3/<project>/list',methods=['GET'])
+def obj(project):
+    func='%s_list'%(project)
+    print(func)
+    if hasattr(openstack,func):
+        obj=getattr(openstack,func)
+        data=obj(dict_json=True)
+        return jsonify(data)
+    else:
+        return jsonify({'error':'no project list'})
+@app.route('/v3/<project>/<id>',methods=['GET'])
+def get_obj(project,id):
+    print(project,id)
+    func = '%s_get' % (project)
+    if hasattr(openstack, func):
+        obj = getattr(openstack, func)
+        print(obj)
+        data=obj(id,dict_json=True)
+        return jsonify(data)
+    return jsonify({'error':'No mode of submission'})

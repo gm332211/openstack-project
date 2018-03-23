@@ -2,8 +2,13 @@
 # author:xiaoming
 from libcloud.compute.providers import get_driver
 from libcloud.compute.types import Provider
-from core.tools import file_read,error_info
+
 import os
+PATH=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# print(PATH)
+import sys
+sys.path.insert(0,PATH)
+from core.tools import file_read,error_info
 def op_lib_conn():
     PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     filename='%s/db/%s'%(PATH,'op_connect.json')
@@ -26,10 +31,15 @@ def op_lib_conn():
     else:
         error_info('文件不存在')
         return 0
-# conn=op_lib_conn()
 # print(conn)
+# conn=op_lib_conn()
+# for i in dir(conn):
+#     print(i)
 # images = conn.list_images()
-# print(images)
+# networks=conn.ex_list_networks()
+# print(networks)
+
+
 
 # auth_username = 'admin'
 # auth_password = '000000'

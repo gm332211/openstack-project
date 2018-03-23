@@ -1,1 +1,1 @@
-{"auth_username": "admin", "auth_password": "000000", "region_name": "RegionOne", "auth_url": "http://controller:5000", "domain_name": "domain", "project_name": "admin"}
+{"region_name": "RegionOne", "project_name": "admin", "domain_name": "domain", "auth_username": "admin", "auth_password": "000000", "auth_url": "http://controller:5000"}

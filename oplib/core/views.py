@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # author:xiaoming
 # from . import op_lib_conn
+from libcloud.compute.drivers.libvirt_driver import LibvirtNodeDriver
 def try_obj(message=''):
     '''
     测试装饰器
@@ -23,6 +24,12 @@ class openstack():
     '''
     def __init__(self,conn):
         self.conn=conn
+        self.node_handle={
+            'reboot':self.conn.reboot_node,
+            'shutdown':self.nova_shutdown,
+            'start':LibvirtNodeDriver.ex_start_node
+        }
+        print('openstack类生成完毕.....')
     @try_obj()
     def image_get(self,image_id,dict_json=False,*args,**kwargs):
         '''
@@ -121,13 +128,24 @@ class openstack():
                 data[vm.name]=nova_format(vm)
             return data
         return vms
-    def nova_reboot(self,vm_id,*args,**kwargs):
-        '''重启一个虚机'''
+    def nova_handle(self,vm_id,cmd,*args,**kwargs):
+        '''虚拟机的统一操作接口'''
         vm=self.nova_get([vm_id,])
-        if self.conn.reboot_node(vm[0]):
-            return {vm[0].name:{'info':'reboot success'}}
+        print(vm[0])
+        if cmd in self.node_handle:
+            obj=self.node_handle.get(cmd)
+            if obj(vm[0]):
+                return {vm[0].name: {'info': '%s success'%cmd}}
+            else:
+                return {vm[0].name: {'info': '%s success'%cmd}}
         else:
-            return {vm[0].name: {'info': 'reboot success'}}
+            return {'error':'Nova does not have this command.'}
+    def nova_shutdown(self,vm,*args,**kwargs):
+
+        if LibvirtNodeDriver(uri='kvm:///system').ex_shutdown_node(vm):
+            return 1
+        else:
+            return 0
     def nova_reboot_many(self,vms_id,*args,**kwargs):
         '''重启多个虚机'''
         data={}
@@ -155,6 +173,7 @@ class openstack():
                                    size=self.flavor_get(size_id),
                                    networks=[self.network_get(network_id),],
                                    )
+        self.conn.wait_until_running([node])
         return nova_format(node)
     def nova_del(self,vm_id,*args,**kwargs):
         '''删除一个虚机'''
@@ -183,6 +202,86 @@ class openstack():
             else:
                 data[vm.name] = {'info': 'del fail'}
         return data
+    def bind_floating_ip(self,vm_id,*args,**kwargs):
+        '''绑定浮动ip'''
+        vm=self.nova_get([vm_id,])
+        private_ip = None
+        if len(vm[0].private_ips):
+            private_ip = vm[0].private_ips[0]
+            print('Private IP found: {}'.format(private_ip))
+        else:
+            public_ip=self.create_floating_ip()
+            self.conn.ex_attach_floating_ip_to_node(vm[0], public_ip)
+            return {'info':'floating ip binding success'}
+    def create_floating_ip(self,*args,**kwargs):
+        '''创建浮动ip'''
+        print('Checking for unused Floating IP...')
+        unused_floating_ip = None
+        for floating_ip in self.conn.ex_list_floating_ips():
+            if not floating_ip.node_id:
+                unused_floating_ip = floating_ip
+                break
+        if not unused_floating_ip and len(self.conn.ex_list_floating_ip_pools()):
+            pool = self.conn.ex_list_floating_ip_pools()[0]
+            print('Allocating new Floating IP from pool: {}'.format(pool))
+            unused_floating_ip = pool.create_floating_ip()
+        return unused_floating_ip
+class swift():
+    def __init__(self,conn):
+        self.swift=conn
+        print('swift类生成完毕.....')
+    def create(self,name,*args,**kwargs):
+        '''创建容器'''
+        container = self.swift.create_container(container_name=name)
+        data=swift_format(container)
+        return data
+    def list(self,*args,**kwargs):
+        '''获取容器列表'''
+        containers = self.swift.list_containers()
+        data={}
+        for container in containers:
+            data[container.name]=swift_format(container)
+        return data
+    def get(self,name,dict_json=False,*args,**kwargs):
+        '''获取单个容器'''
+        container = self.swift.get_container(name)
+        if dict_json:
+            data=swift_format(container)
+            return data
+        return container
+    def obj_list(self,container_name,*args,**kwargs):
+        '''获取容器内部对象'''
+        container=self.get(container_name)
+        objects = container.list_objects()
+        data={}
+        for object in objects:
+            data[container_name]=swift_obj_format(object)
+        return data
+    def obj_get(self,container_name,object_name,dict_json=False,*args,**kwargs):
+        '''获取单个容器内部对象'''
+        data = {}
+        object = self.swift.get_object(container_name, object_name)
+        if dict_json:
+            data[container_name]=swift_obj_format(object)
+            return data
+        else:
+            return object
+    def swift_del(self,container_name,*args,**kwargs):
+        '''删除容器'''
+        cont=self.get(container_name)
+        if self.swift.delete_container(cont):
+            return {'info':'delete success'}
+        else:
+            return {'error':'delete fail'}
+    def obj_del(self,container_name,object_name):
+        '''删除容器内的一个对象'''
+        cont = self.get(container_name)
+        obj=self.obj_get(container_name,object_name)
+        if cont.delete_object(obj):
+            return {'info': 'delete success'}
+        else:
+            return {'error': 'delete fail'}
+
 #统一格式化
 def image_format(image):
     data = {
@@ -229,6 +328,16 @@ def nova_format(vm):
             'extra':vm.extra
         }
     return data
-
-
-
+def swift_format(obj):
+    data={
+        'name':obj.name,
+        'extra':obj.extra,
+    }
+    return data
+def swift_obj_format(obj):
+    data={
+        'name':obj.name,
+        'size':obj.size,
+        'hash':obj.hash
+    }
+    return data

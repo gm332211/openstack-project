@@ -1,33 +1,40 @@
 # -*- coding: utf-8 -*-
 # author:xiaoming
-from libcloud.compute.providers import get_driver
-from libcloud.compute.types import Provider
-
-import os
-PATH=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+# import os
+# PATH=os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # print(PATH)
-import sys
-sys.path.insert(0,PATH)
-from core.tools import file_read,error_info
-def op_lib_conn():
+# import sys
+# sys.path.insert(0,PATH)
+from core.tools import file_read, error_info
+def auth_dict():
+    '''获取认证数据'''
+    import os
     PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     filename='%s/db/%s'%(PATH,'op_connect.json')
     data=file_read(filename)
+    return data
+def lib_conn(obj_type='compute'):
+    data=auth_dict()
     if not data=='':
-        auth_username = data.get('auth_username')
-        auth_password = data.get('auth_password')
-        auth_url = data.get('auth_url')
-        project_name = data.get('project_name')
-        domain_name= data.get('domain_name')
-        region_name = data.get('region_name')
-        provider = get_driver(Provider.OPENSTACK)
-        return provider(auth_username,
-                        auth_password,
-                        ex_force_auth_url=auth_url,
+        if obj_type == 'compute':
+            '''apache lib openstack connect'''
+            from libcloud.compute.providers import get_driver
+            from libcloud.compute.types import Provider
+            provider = get_driver(Provider.OPENSTACK)
+        elif obj_type == 'swift':
+            '''apache lib swift connect'''
+            from libcloud.storage.types import Provider
+            from libcloud.storage.providers import get_driver
+            provider = get_driver(Provider.OPENSTACK_SWIFT)
+        else:
+            return 0
+        return provider(data.get('auth_username'),
+                        data.get('auth_password'),
+                        ex_force_auth_url=data.get('auth_url'),
                         ex_force_auth_version='3.x_password',
-                        ex_tenant_name=project_name,
-                        ex_domain_name=domain_name,
-                        ex_force_service_region=region_name)
+                        ex_tenant_name=data.get('project_name'),
+                        ex_domain_name=data.get('domain_name'),
+                        ex_force_service_region=data.get('region_name'))
     else:
         error_info('文件不存在')
         return 0

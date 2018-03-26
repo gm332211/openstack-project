@@ -6,8 +6,9 @@ PATH=os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abs
 filename='%s/%s'%(PATH,'op_connect')
 from core.tools import file_write
 from core import views
-from core.libconn import op_lib_conn
-openstack=views.openstack(op_lib_conn())
+from core.libconn import lib_conn
+openstack=views.openstack(lib_conn())
+swift=views.swift(lib_conn(obj_type='swift'))
 app=Flask(__name__)
 @app.route('/help')
 def help_list():
@@ -41,7 +42,7 @@ def op_conn():
 @app.route('/test/connect',methods=['GET'])
 def test_conn():
     '''连接测试'''
-    conn=op_lib_conn()
+    conn=lib_conn()
     if not conn:
         return jsonify({'error':'no set connect'})
     try:
@@ -49,7 +50,7 @@ def test_conn():
     except Exception as e:
         return jsonify({'error':'connection fail'})
     else:
-        openstack.conn=op_lib_conn()
+        openstack.conn=lib_conn()
         return jsonify({'info':'ok'})
         # return 'ok'
 @app.route('/v3/nova/create',methods=['GET','POST'])
@@ -70,16 +71,8 @@ def nova_create():
 @app.route('/v3/nova/<id>/<cmd>',methods=['GET'])
 def cmd_obj(cmd,id):
     '''nova下的使用方法'''
-    if id=='all':
-        func = 'nova_%s_%s' %(cmd,id)
-    else:
-        func='nova_%s'%cmd
-    if hasattr(openstack,func):
-        obj=getattr(openstack,func)
-        data=obj(id)
-        return jsonify(data)
-    else:
-        return jsonify({'error':'no nova project'})
+    data=openstack.nova_handle(id,cmd)
+    return jsonify(data)
 @app.route('/v3/<project>/list',methods=['GET'])
 def list_obj(project):
     '''查看带有列表对象的信息'''
@@ -99,5 +92,18 @@ def get_obj(project,id):
         data=obj(id,dict_json=True)
         return jsonify(data)
     return jsonify({'error':'No mode of submission'})
+@app.route('/v3/swift/create',methods=['GET','POST'])
+def swift_create():
+    if request.method=='GET':
+        form_list=['name']
+        return render_template('form.html',action='/v3/swift/create',data=form_list)
+    if request.method=='POST':
+        name=request.values.get('name')
+        data=swift.create(name)
+        return jsonify(data)
+@app.route('/v3/swift/list',methods=['GET'])
+def swift_list():
+    data=swift.list()
+    return jsonify(data)
 def image_create():
     pass

@@ -141,8 +141,8 @@ class openstack():
         else:
             return {'error':'Nova does not have this command.'}
     def nova_shutdown(self,vm,*args,**kwargs):
-
-        if LibvirtNodeDriver(uri='kvm:///system').ex_shutdown_node(vm):
+        print(vm.name)
+        if LibvirtNodeDriver(uri='http://172.24.2.11:5000',key='admin',secret='000000').ex_shutdown_node(vm):
             return 1
         else:
             return 0

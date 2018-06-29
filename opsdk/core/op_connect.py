@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author:xiaoming
-'''openstack 连接文件'''
+'''openstack_api 连接文件'''
 from core.connect_set import show_openstack_connection_now
 def op_connectionv2(data):
     '''python2 openstack_sdk连接'''

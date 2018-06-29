@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # author:xiaoming
-'''openstack 连接endpoint的设置文件'''
+'''openstack_api 连接endpoint的设置文件'''
 from core.views import store_data
 from core.tools import help_list,out_beautiful
 from db import db_orm

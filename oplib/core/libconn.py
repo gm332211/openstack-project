@@ -17,7 +17,7 @@ def lib_conn(obj_type='compute'):
     data=auth_dict()
     if not data=='':
         if obj_type == 'compute':
-            '''apache lib openstack connect'''
+            '''apache lib openstack_api connect'''
             from libcloud.compute.providers import get_driver
             from libcloud.compute.types import Provider
             provider = get_driver(Provider.OPENSTACK)

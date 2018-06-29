@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<h1>当前openstack列表</h1>
+<h2>
+    <span>正在使用的openstack：IP:</span>
+    <span id="ip">{{use_openstack.ip}}</span>
+    <span>Port:</span>
+    <span id="port">{{use_openstack.port}}</span>
+</h2>
+<span><a href="/v3">创建</a></span><span id="lj" style="color: red"></span>
+<body>
+    <table  border="1" cellspacing="0">
+        <thead>
+        <tr>
+            <td>id</td>
+            <td>ip</td>
+            <td>port</td>
+            <td>domain</td>
+            <td>project</td>
+            <td>username</td>
+            <td>操作</td>
+        </tr>
+        </thead>
+        <tbody>
+        {% for key in data %}
+
+        <tr id='{{key.id}}'>
+            <td>{{loop.index}}</td>
+            <td>{{key.ip}}</td>
+            <td>{{key.port}}</td>
+            <td>{{key.domain}}</td>
+            <td>{{key.project}}</td>
+            <td>{{key.username}}</td>
+            <td><span style="cursor: pointer;" opid="{{key.id}}" status="connect" ip="{{key.ip}}" port="{{key.port}}"  onclick="delXMLDoc(this)">连接</span>
+                <span style="cursor: pointer;" opid="{{key.id}}" status="delete" onclick="delXMLDoc(this)">删除</span>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</body>
+<script type="text/javascript">
+    function delXMLDoc(that){
+        var xmlhttp;
+        var id=that.getAttribute('opid');
+        var status=that.getAttribute('status');
+        if (window.XMLHttpRequest){
+            xmlhttp=new XMLHttpRequest();
+        }
+        else{
+            xmlhttp=new ActiveXObject('Microsoft.XMLHTTP')
+        }
+        xmlhttp.onreadystatechange=function(){
+            if (xmlhttp.readyState==4&&xmlhttp.status==200){
+                var lj=document.getElementById("lj");
+                lj.style.display="inline";
+                lj.innerHTML=xmlhttp.responseText;
+                if(lj.innerHTML=='删除成功'){
+                    document.getElementById(id).style.display='none'
+                }
+                if(lj.innerHTML=='连接成功'){
+                    document.getElementById('ip').innerHTML=that.getAttribute('ip');
+                    document.getElementById('port').innerHTML=that.getAttribute('port')
+                }
+                setTimeout(function(){
+                lj.style.display="none";
+                },
+                3000);
+                console.log(xmlhttp.responseText);
+            }
+        };
+        console.log(id,status);
+        xmlhttp.open('GET','/v3/list?id='+id+'&status='+status,true);
+        xmlhttp.send()
+    }
+</script>
+</html>

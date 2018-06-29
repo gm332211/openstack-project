@@ -67,7 +67,7 @@ class store_data(object):
         pass
 class nova_class(object):
     '''openstacksdk调用函数类'''
-    def create_keypair(self,conn,keypair_name,ssh_dir='private_key_dir',private_keypair_file='openstack-key'):
+    def create_keypair(self,conn,keypair_name,ssh_dir='private_key_dir',private_keypair_file='openstack_api-key'):
         '''创建虚机秘钥'''
         import os,errno
         keypair = conn.compute.find_keypair(keypair_name)
@@ -95,10 +95,10 @@ class nova_class(object):
         network_name = args[0][2]
         server_name = args[0][3]
         conn=pythone_version()
-        keypair = self.create_keypair(conn=conn, keypair_name='openstack-key',
+        keypair = self.create_keypair(conn=conn, keypair_name='openstack_api-key',
                                  ssh_dir='private_key_dir',
-                                 private_keypair_file='openstack-key')
-        private_keypair_file='openstack-key'
+                                 private_keypair_file='openstack_api-key')
+        private_keypair_file='openstack_api-key'
         print("Create Server:")
         image = conn.compute.find_image(image_name)
         flavor = conn.compute.find_flavor(flavor_name)

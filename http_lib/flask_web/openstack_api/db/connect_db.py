@@ -16,5 +16,5 @@ class Op_Connect(Base):
     __table_args__ = (UniqueConstraint('ip','port'),)
 # engine = create_engine('mysql+mysqlconnector://root:password@localhost:3306/test')
 #连接数据库
-engine = create_engine('mysql+pymysql://root:000000@localhost/op_connect',encoding='utf-8',echo=True)
+engine = create_engine('mysql+pymysql://root:password@172.24.2.10:3306/op_connect',encoding='utf-8',echo=True)
 Base.metadata.create_all(engine)#创建表结构

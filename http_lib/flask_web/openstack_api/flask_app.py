@@ -160,7 +160,7 @@ def identity_show(project,id):
 def identity_create(project):
 
     pass
-@app.route('v3/<project>/<id>',methods=['delete'])
+# @app.route('v3/<project>/<id>',methods=['delete'])
 #删除一个认证对象
 def identity_delete(project,id):
     pass
